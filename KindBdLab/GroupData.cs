@@ -43,8 +43,9 @@ namespace KindBdLab
         private void GroupData_Shown(object sender, EventArgs e)
         {
             var con = Form1.con;
-            var query = "SELECT `group_id`, `room`, vosp.`name` as vospitatel, `cap` as max_children, count(childrens.`name`) as cur_children FROM groups " +
-                        "LEFT JOIN vosp ON vosp.group = groups.group_id " +
+            //gruppa, komnata, vospitatel, dannie po svobodnomu mestu
+            var query = "SELECT `group_id`, `room`, vosp.`name` as vospitatel, `cap` as max_children, count(distinct childrens.`children_id`) as cur_children FROM groups " +
+                        "LEFT JOIN vosp ON vosp.group = group_id " +
                         "LEFT JOIN childrens ON childrens.group = group_id " +
                         "GROUP BY group_id";
             using (MySqlCommand cmd = new MySqlCommand(query, con))
