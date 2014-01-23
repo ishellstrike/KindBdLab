@@ -1,0 +1,106 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Globalization;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+using MySql.Data.MySqlClient;
+
+namespace KindBdLab
+{
+    public partial class GroupData : Form
+    {
+        public GroupData()
+        {
+            InitializeComponent();
+        }
+
+        private int groupsel = 0;
+
+        private void dataGridView1_SelectionChanged(object sender, EventArgs e) {
+            var con = Form1.con;
+            if (dataGridView1.SelectedCells.Count == 0) { return; }
+            var t = dataGridView1.SelectedCells[0].RowIndex;
+            var t2 = dataGridView1.Rows[t].Cells[0].Value;
+            groupsel = (int)t2;
+            using (var cmd = new MySqlCommand(string.Format("SELECT `name`,`birth` from childrens where childrens.group = {0}", t2), con))
+            {
+                using (MySqlDataAdapter da = new MySqlDataAdapter(cmd))
+                {
+                    DataTable dt = new DataTable();
+                    da.Fill(dt);
+                    dataGridView2.DataSource = dt.DefaultView;
+                    dataGridView2.Update();
+                }
+            }
+            using (var cmd = new MySqlCommand(string.Format("SELECT `name`,`birth` from childrens where childrens.group = {0}", t2), con))
+            {
+                using (MySqlDataAdapter da = new MySqlDataAdapter(cmd))
+                {
+                    DataTable dt = new DataTable();
+                    da.Fill(dt);
+                    dataGridView2.DataSource = dt.DefaultView;
+                    dataGridView2.Update();
+                }
+            }
+
+            UpdateIllness();
+        }
+
+        private void GroupData_Shown(object sender, EventArgs e)
+        {
+            var con = Form1.con;
+            var query = "SELECT * FROM groups";
+            using (MySqlCommand cmd = new MySqlCommand(query, con))
+            {
+                using (MySqlDataAdapter da = new MySqlDataAdapter(cmd))
+                {
+                    DataTable dt = new DataTable();
+                    da.Fill(dt);
+                    dataGridView1.DataSource = dt.DefaultView;
+                    dataGridView1.Update();
+                }
+            }
+        }
+
+        private void GroupData_Load(object sender, EventArgs e)
+        {
+
+        }
+        IFormatProvider ifp = new CultureInfo("en-US");
+
+        private void UpdateIllness() {
+            var con = Form1.con;
+            var a = dateTimePicker1.Value.ToString("yyyy-mm-dd");
+            var b = dateTimePicker2.Value.ToString("yyyy-mm-dd");
+            using (var cmd = new MySqlCommand(string.Format(@"SELECT `illness`, `date` FROM med 
+                                                                WHERE type = 'ill' 
+                                                                AND `date` > CAST({1} AS date) 
+                                                                AND `date` < CAST({2} AS date) 
+                                                                AND children_id IN (SELECT children_id FROM childrens 
+                                                                                        WHERE childrens.group={0})", groupsel, a, b), con))
+            {
+                using (MySqlDataAdapter da = new MySqlDataAdapter(cmd))
+                {
+                    DataTable dt = new DataTable();
+                    da.Fill(dt);
+                    dataGridView3.DataSource = dt.DefaultView;
+                    dataGridView3.Update();
+                }
+            }
+        }
+
+        private void dateTimePicker1_ValueChanged(object sender, EventArgs e)
+        {
+            UpdateIllness();
+        }
+
+        private void dateTimePicker2_ValueChanged(object sender, EventArgs e)
+        {
+            UpdateIllness();
+        }
+    }
+}

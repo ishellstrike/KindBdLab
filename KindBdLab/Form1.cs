@@ -9,7 +9,10 @@ using MySql.Data.MySqlClient;
 namespace KindBdLab
 {
     public partial class Form1 : Form {
-        private MySqlConnection con;
+        internal static MySqlConnection con;
+        private AddForm form = new AddForm();
+        private GroupData gform = new GroupData();
+        internal static bool NeedUpdate;
 
         public Form1()
         {
@@ -22,7 +25,10 @@ namespace KindBdLab
             SqlMethods.DropAll(con);
             SqlMethods.RecreateTables(con);
             SqlMethods.FillTestData(con);
+            UpdateDb();
+        }
 
+        public void UpdateDb() {
             string query = "SELECT * FROM childrens";
             using (MySqlCommand cmd = new MySqlCommand(query, con))
             {
@@ -34,18 +40,6 @@ namespace KindBdLab
                     dataGridView1.Update();
                 }
             }
-
-            query = "SELECT * FROM groups";
-            using (MySqlCommand cmd = new MySqlCommand(query, con))
-            {
-                using (MySqlDataAdapter da = new MySqlDataAdapter(cmd))
-                {
-                    DataTable dt = new DataTable();
-                    da.Fill(dt);
-                    dataGridView2.DataSource = dt.DefaultView;
-                    dataGridView2.Update();
-                }
-            }
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -55,19 +49,7 @@ namespace KindBdLab
 
         private void dataGridView2_SelectionChanged(object sender, EventArgs e)
         {
-            if(dataGridView2.SelectedCells.Count == 0){return;}
-            var t = dataGridView2.SelectedCells[0].RowIndex;
-            var t2 = dataGridView2.Rows[t].Cells[0].Value;
-            using (var cmd = new MySqlCommand(string.Format("SELECT `name`,`birth` from childrens where childrens.group = {0}", t2), con))
-            {
-                using (MySqlDataAdapter da = new MySqlDataAdapter(cmd))
-                {
-                    DataTable dt = new DataTable();
-                    da.Fill(dt);
-                    dataGridView3.DataSource = dt.DefaultView;
-                    dataGridView3.Update();
-                }
-            }
+            
         }
 
         private void dataGridView1_SelectionChanged(object sender, EventArgs e)
@@ -124,12 +106,71 @@ namespace KindBdLab
                     i++;
                 }
             }
-            
+
+            using (var cmd = new MySqlCommand(string.Format("SELECT max(`value`)-min(`value`) AS difference_rost, `date` FROM med WHERE children_id = {0} and type='rost' GROUP BY MONTH(`date`)", t4), con))
+            {
+                using (MySqlDataAdapter da = new MySqlDataAdapter(cmd))
+                {
+                    DataTable dt = new DataTable();
+                    da.Fill(dt);
+                    dataGridView2.DataSource = dt.DefaultView;
+                    dataGridView2.Update();
+                }
+            }
+
+            using (var cmd = new MySqlCommand(string.Format("SELECT max(`value`)-min(`value`) AS difference_ves, `date` FROM med WHERE children_id = {0} and type='ves' GROUP BY MONTH(`date`)", t4), con))
+            {
+                using (MySqlDataAdapter da = new MySqlDataAdapter(cmd))
+                {
+                    DataTable dt = new DataTable();
+                    da.Fill(dt);
+                    dataGridView3.DataSource = dt.DefaultView;
+                    dataGridView3.Update();
+                }
+            }
         }
 
         private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
 
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            if (!form.Visible) {
+                form.Show(this);
+            }
+        }
+
+        private void dataGridView1_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e) {
+
+        }
+
+        private void bindingSource1_CurrentChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            if (NeedUpdate) {
+                NeedUpdate = false;
+
+                UpdateDb();
+            }
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            if (!gform.Visible)
+            {
+                gform.Show(this);
+            }
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            UpdateDb();
         }
     }
 }
