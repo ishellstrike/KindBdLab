@@ -76,7 +76,7 @@ namespace KindBdLab
             var t = dataGridView1.SelectedCells[0].RowIndex;
             var t2 = dataGridView1.Rows[t].Cells[4].Value;
             var t3 = dataGridView1.Rows[t].Cells[5].Value;
-            using (var cmd = new MySqlCommand(string.Format("SELECT * from parents where parent_id = {0} or parent_id = {1}", t2, t3), con))
+            using (var cmd = new MySqlCommand(string.Format("call sel({0},{1})", t2, t3), con))
             {
                 using (MySqlDataAdapter da = new MySqlDataAdapter(cmd))
                 {
@@ -88,7 +88,7 @@ namespace KindBdLab
             }
 
             var t4 = dataGridView1.Rows[t].Cells[0].Value;
-            using (var cmd = new MySqlCommand(string.Format("SELECT * from med where children_id = {0} and type='rost' ORDER BY date", t4), con))
+            using (var cmd = new MySqlCommand(string.Format("call p1({0})", t4), con))
             {
                 using (MySqlDataAdapter da = new MySqlDataAdapter(cmd))
                 {
@@ -99,7 +99,7 @@ namespace KindBdLab
                 }
             }
 
-            using (var cmd = new MySqlCommand(string.Format("SELECT * from med where children_id = {0} and type!='rost' ORDER BY date", t4), con))
+            using (var cmd = new MySqlCommand(string.Format("call p2({0})", t4), con))
             {
                 using (MySqlDataAdapter da = new MySqlDataAdapter(cmd))
                 {

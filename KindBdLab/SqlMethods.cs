@@ -32,6 +32,21 @@ namespace KindBdLab
             using (var t = new MySqlCommand(@"DROP TABLE IF EXISTS `med`", msc)) {
                 t.ExecuteNonQuery();
             }
+
+            using (var t = new MySqlCommand(@"DROP PROCEDURE IF EXISTS p2;", msc))
+            {
+                t.ExecuteNonQuery();
+            }
+
+            using (var t = new MySqlCommand(@"DROP PROCEDURE IF EXISTS p1;", msc))
+            {
+                t.ExecuteNonQuery();
+            }
+
+            using (var t = new MySqlCommand(@"DROP PROCEDURE IF EXISTS sel;", msc))
+            {
+                t.ExecuteNonQuery();
+            }
         }
 
         public static void RecreateTables(MySqlConnection msc)
@@ -47,6 +62,42 @@ namespace KindBdLab
                 PRIMARY KEY (`children_id`));", msc)) {
                t.ExecuteNonQuery();
            }
+
+            using (var t = new MySqlCommand(
+                @" CREATE PROCEDURE `p2` (IN some_id int)  
+                    LANGUAGE SQL  
+                    DETERMINISTIC  
+                    SQL SECURITY DEFINER  
+                    COMMENT 'A procedure'  
+                    BEGIN
+                        SELECT * from med where children_id = some_id and type!='rost' ORDER BY date;  
+                    END", msc)) {
+                t.ExecuteNonQuery();
+            }
+
+            using (var t = new MySqlCommand(
+                @" CREATE PROCEDURE `p1` (IN some_id int)  
+                    LANGUAGE SQL  
+                    DETERMINISTIC  
+                    SQL SECURITY DEFINER  
+                    COMMENT 'A procedure'  
+                    BEGIN
+                        SELECT * from med where children_id = some_id and type='rost' ORDER BY date;  
+                    END", msc)) {
+                t.ExecuteNonQuery();
+            }
+
+            using (var t = new MySqlCommand(
+                @" CREATE PROCEDURE `sel` (IN par_id int, par_id2 int)  
+                    LANGUAGE SQL  
+                    DETERMINISTIC  
+                    SQL SECURITY DEFINER  
+                    COMMENT 'A procedure'  
+                    BEGIN
+                        SELECT * from parents where parent_id = par_id or parent_id = par_id2;
+                    END", msc)) {
+                t.ExecuteNonQuery();
+            }
 
             using (var t = new MySqlCommand(
                 @"CREATE TABLE IF NOT EXISTS `groups` (
@@ -173,9 +224,21 @@ namespace KindBdLab
                 (40, '2000-03-04', 'temp', 36, 12),
                 (41, '2000-01-08', 'temp', 36, 13),
                 (42, '2000-02-07', 'temp', 36, 14),
-                (43, '2000-03-03', 'rost', 102, 15),
-                (44, '2000-01-06', 'rost', 104, 16),
-                (45, '2000-02-04', 'rost', 120, 1);", msc))
+                (43, '2000-03-03', 'rost', 102, 2),
+                (44, '2000-01-06', 'rost', 114, 2),
+                (45, '2000-01-01', 'rost', 130, 2),
+                (46, '2000-02-02', 'rost', 122, 2),
+                (47, '2000-03-03', 'rost', 115, 2),
+                (48, '2000-01-04', 'rost', 116, 2),
+                (49, '2000-02-05', 'rost', 124, 2),
+                (50, '2000-03-06', 'rost', 102, 2),
+                (51, '2000-01-07', 'rost', 103, 2),
+                (52, '2000-02-08', 'rost', 104, 2),
+                (53, '2000-03-09', 'rost', 114, 2),
+                (54, '2000-01-10', 'rost', 134, 2),
+                (55, '2000-02-03', 'rost', 127, 2),
+                (56, '2000-01-04', 'rost', 158, 2),
+                (57, '2000-02-04', 'rost', 140, 2);", msc))
             {
                 t.ExecuteNonQuery();
             }
