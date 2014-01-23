@@ -137,6 +137,10 @@ namespace KindBdLab
 
         private void button2_Click(object sender, EventArgs e)
         {
+            if (form.IsDisposed) {
+                form = new AddForm();
+            }
+
             if (!form.Visible) {
                 form.Show(this);
             }
@@ -162,6 +166,10 @@ namespace KindBdLab
 
         private void button3_Click(object sender, EventArgs e)
         {
+            if (gform.IsDisposed) {
+                gform = new GroupData();
+            }
+
             if (!gform.Visible)
             {
                 gform.Show(this);

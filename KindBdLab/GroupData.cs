@@ -36,16 +36,6 @@ namespace KindBdLab
                     dataGridView2.Update();
                 }
             }
-            using (var cmd = new MySqlCommand(string.Format("SELECT `name`,`birth` from childrens where childrens.group = {0}", t2), con))
-            {
-                using (MySqlDataAdapter da = new MySqlDataAdapter(cmd))
-                {
-                    DataTable dt = new DataTable();
-                    da.Fill(dt);
-                    dataGridView2.DataSource = dt.DefaultView;
-                    dataGridView2.Update();
-                }
-            }
 
             UpdateIllness();
         }
@@ -53,7 +43,10 @@ namespace KindBdLab
         private void GroupData_Shown(object sender, EventArgs e)
         {
             var con = Form1.con;
-            var query = "SELECT `group_id`, `room`, `name` as vospitatel FROM groups LEFT JOIN vosp ON vosp.group = groups.group_id GROUP BY group_id";
+            var query = "SELECT `group_id`, `room`, vosp.`name` as vospitatel, `cap` as max_children, count(childrens.`name`) as cur_children FROM groups " +
+                        "LEFT JOIN vosp ON vosp.group = groups.group_id " +
+                        "LEFT JOIN childrens ON childrens.group = group_id " +
+                        "GROUP BY group_id";
             using (MySqlCommand cmd = new MySqlCommand(query, con))
             {
                 using (MySqlDataAdapter da = new MySqlDataAdapter(cmd))
@@ -78,11 +71,14 @@ namespace KindBdLab
             a = a.Substring(0, a.IndexOf('T'));
             var b = dateTimePicker2.Value.ToString("s");
             b = b.Substring(0, b.IndexOf('T'));
-            var str = string.Format(@"SELECT `illness`, `date`, `name` FROM med 
-                                                                LEFT JOIN childrens ON childrens.children_id = med.children_id
-                                                                WHERE type = 'ill' 
-                                                                AND `date` BETWEEN CAST('{1}' AS date) AND CAST('{2}' AS date)
-                                                                AND med.children_id IN (SELECT childrens.children_id FROM childrens WHERE childrens.group={0})",
+            //bolezni po gruppe
+            var str = string.Format("SELECT `illness`, `date`, `name` FROM med " +
+                                    "LEFT JOIN childrens ON childrens.children_id = med.children_id  " +
+                                    "WHERE type = 'ill' " +
+                                    "AND `date` BETWEEN CAST('{1}' AS date) " +
+                                    "AND CAST('{2}' AS date) " +
+                                    "AND med.children_id IN " +
+                                    "(SELECT childrens.children_id FROM childrens WHERE childrens.group={0})",
                                     groupsel, a, b);
             using (var cmd = new MySqlCommand(str, con))
             {
@@ -95,10 +91,11 @@ namespace KindBdLab
                 }
             }
 
-            str = string.Format(@"SELECT `illness`, `date`, `name` FROM med 
-                                                                LEFT JOIN childrens ON childrens.children_id = med.children_id
-                                                                WHERE type = 'ill' 
-                                                                AND `date` BETWEEN CAST('{1}' AS date) AND CAST('{2}' AS date)",
+            //bolezni po sadu
+            str = string.Format("SELECT `illness`, `date`, `name` FROM med " +
+                                "LEFT JOIN childrens ON childrens.children_id = med.children_id " +
+                                "WHERE type = 'ill' " +
+                                "AND `date` BETWEEN CAST('{1}' AS date) AND CAST('{2}' AS date)",
                                     groupsel, a, b);
             using (var cmd = new MySqlCommand(str, con))
             {
@@ -112,11 +109,13 @@ namespace KindBdLab
             }
 
               
-            str = string.Format(@"SELECT max(`value`) - min(`value`) AS difference_ves, YEAR(`date`) as year, `name` FROM med 
-                                                                LEFT JOIN childrens ON childrens.children_id = med.children_id
-                                                                WHERE type = 'ves' 
-                                                                AND med.children_id IN (SELECT childrens.children_id FROM childrens WHERE childrens.group={0})
-                                                                GROUP BY med.children_id",
+            //prives po gruppe
+            str = string.Format("SELECT max(`value`) - min(`value`) AS difference_ves, YEAR(`date`) as year, `name` FROM med " +
+                                "LEFT JOIN childrens ON childrens.children_id = med.children_id " +
+                                "WHERE type = 'ves' " +
+                                "AND med.children_id IN " +
+                                "(SELECT childrens.children_id FROM childrens WHERE childrens.group={0}) " +
+                                "GROUP BY med.children_id",
                                    groupsel, a, b);
             using (var cmd = new MySqlCommand(str, con))
             {
@@ -129,11 +128,10 @@ namespace KindBdLab
                 }
             }
 
-            //  AND med.children_id IN (SELECT childrens.children_id FROM childrens WHERE childrens.group={0})
-            str = string.Format(@"SELECT max(`value`) - min(`value`) AS difference_ves, YEAR(`date`) as year, `name` FROM med 
-                                                                LEFT JOIN childrens ON childrens.children_id = med.children_id
-                                                                WHERE type = 'ves' 
-                                                                GROUP BY med.children_id",
+            //  prives po sadu
+            str = string.Format("SELECT max(`value`) - min(`value`) AS difference_ves, YEAR(`date`) as year, `name` FROM med " +
+                                "LEFT JOIN childrens ON childrens.children_id = med.children_id " +
+                                "WHERE type = 'ves'GROUP BY med.children_id",
                                    groupsel, a, b);
             using (var cmd = new MySqlCommand(str, con))
             {
@@ -144,15 +142,6 @@ namespace KindBdLab
                     dataGridView6.DataSource = dt.DefaultView;
                     dataGridView6.Update();
                 }
-            }
-
-            str = string.Format(@"SELECT max(`value`) - min(`value`) AS difference_ves, YEAR(`date`) as year, `name` FROM med 
-                                                                LEFT JOIN childrens ON childrens.children_id = med.children_id
-                                                                WHERE type = 'ves' 
-                                                                GROUP BY med.children_id",
-                                   groupsel, a, b);
-            using (var cmd = new MySqlCommand(str, con)) {
-
             }
         }
 
