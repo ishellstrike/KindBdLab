@@ -47,6 +47,11 @@ namespace KindBdLab
             {
                 t.ExecuteNonQuery();
             }
+
+            using (var t = new MySqlCommand(@"DROP TABLE IF EXISTS `vosp`", msc))
+            {
+                t.ExecuteNonQuery();
+            }
         }
 
         public static void RecreateTables(MySqlConnection msc)
@@ -60,6 +65,16 @@ namespace KindBdLab
                 `mother_id` int(11),
                 `father_id` int(11),
                 PRIMARY KEY (`children_id`));", msc)) {
+               t.ExecuteNonQuery();
+           }
+
+           using (var t = new MySqlCommand(
+               @"CREATE TABLE IF NOT EXISTS `vosp` (
+                `vosp_id` int(11) NOT NULL AUTO_INCREMENT,
+                `name` varchar(255) NOT NULL,
+                `group` int(11) NOT NULL,
+                PRIMARY KEY (`vosp_id`));", msc))
+           {
                t.ExecuteNonQuery();
            }
 
@@ -103,6 +118,7 @@ namespace KindBdLab
                 @"CREATE TABLE IF NOT EXISTS `groups` (
                 `group_id` int(11) NOT NULL AUTO_INCREMENT,
                 `room` varchar(255) NOT NULL,
+                `cap` int(11),
                 PRIMARY KEY (`group_id`));", msc)) {
                 t.ExecuteNonQuery();
             }
@@ -173,11 +189,22 @@ namespace KindBdLab
             }
 
             using (var t = new MySqlCommand(
-                @"INSERT INTO `groups` (`group_id`, `room`) VALUES
-                (1, 102),
-                (2, 103),
-                (3, 202),
-                (4, 201);", msc)) {
+                @"INSERT INTO `groups` (`group_id`, `room`, `cap`) VALUES
+                (1, 102, 10),
+                (2, 103, 10),
+                (3, 202, 10),
+                (4, 201, 10);", msc)) {
+                t.ExecuteNonQuery();
+            }
+
+            using (var t = new MySqlCommand(
+                @"INSERT INTO `vosp` (`group`, `name`) VALUES
+                (1, 'Bronisl'),
+                (1, 'Bronisl222'),
+                (2, 'Catheri'),
+                (3, 'Jacob'),
+                (4, 'Ramiro');", msc))
+            {       
                 t.ExecuteNonQuery();
             }
 
@@ -195,14 +222,22 @@ namespace KindBdLab
                 ('2000-01-05', 'rost', 114, 1),
                 ('2000-02-03', 'rost', 117, 1),
                 ('2000-01-04', 'rost', 118, 1),
-                ('2000-02-08', 'ves', 20, 3),
-                ('2000-03-07', 'ves', 20, 1),
-                ('2000-01-06', 'ves', 20, 2),
-                ('2000-02-04', 'ves', 20, 4),
-                ('2000-03-03', 'ves', 20, 5),
-                ('2000-01-01', 'ves', 20, 6),
-                ('2000-02-02', 'ves', 20, 7),
-                ('2000-03-07', 'ves', 20, 8),
+                ('2000-02-08', 'ves', 25, 3),
+                ('2000-03-07', 'ves', 21, 1),
+                ('2000-01-06', 'ves', 22, 2),
+                ('2000-02-04', 'ves', 23, 4),
+                ('2000-03-03', 'ves', 25, 5),
+                ('2000-01-01', 'ves', 24, 6),
+                ('2000-02-02', 'ves', 22, 7),
+                ('2000-03-07', 'ves', 28, 8),
+                ('2001-02-08', 'ves', 27, 3),
+                ('2001-03-07', 'ves', 26, 4),
+                ('2001-01-06', 'ves', 25, 3),
+                ('2001-02-04', 'ves', 29, 1),
+                ('2001-03-03', 'ves', 28, 4),
+                ('2001-01-01', 'ves', 27, 3),
+                ('2001-02-02', 'ves', 26, 2),
+                ('2001-03-07', 'ves', 25, 1),
                 ('2000-01-04', 'temp', 36, 1),
                 ('2000-02-07', 'temp', 36, 2),
                 ('2000-03-02', 'temp', 36, 3),
