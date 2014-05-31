@@ -25,31 +25,40 @@ namespace KindBdLab
             SqlMethods.DropAll(con);
             SqlMethods.RecreateTables(con);
             SqlMethods.FillTestData(con);
-            UpdateDb();
+            LinkAll();
         }
 
-        public void UpdateDb() {
+        private MySqlDataAdapter childrenAdapter;
+        private DataTable childrenTable;
+        public void LinkChildrenDb() {
             string query = "SELECT * FROM childrens";
-            using (MySqlCommand cmd = new MySqlCommand(query, con))
-            {
-                using (MySqlDataAdapter da = new MySqlDataAdapter(cmd))
-                {
-                    DataTable dt = new DataTable();
-                    da.Fill(dt);
-                    dataGridView1.DataSource = dt.DefaultView;
-                    dataGridView1.Update();
-                }
+            using (MySqlCommand cmd = new MySqlCommand(query, con)) {
+                childrenAdapter = new MySqlDataAdapter(cmd);
+                childrenTable = new DataTable();
+                childrenAdapter.Fill(childrenTable);
+                dataGridView1.DataSource = childrenTable.DefaultView;
+                dataGridView1.Update();
             }
         }
 
-        private void Form1_Load(object sender, EventArgs e)
-        {
-            
+        private void dataGridView1_RowValidated(object sender, DataGridViewCellEventArgs e) {
+            try {
+                var changes = childrenTable.GetChanges();
+                if (changes != null) {
+                    var mcb = new MySqlCommandBuilder(childrenAdapter);
+                    childrenAdapter.UpdateCommand = mcb.GetUpdateCommand();
+                    childrenAdapter.Update(changes);
+                    childrenTable.AcceptChanges();
+                }
+            }
+            catch (Exception ex) {
+                MessageBox.Show(ex.ToString());
+                childrenTable.RejectChanges();
+            }
         }
 
-        private void dataGridView2_SelectionChanged(object sender, EventArgs e)
-        {
-            
+        public void LinkAll() {
+            LinkChildrenDb();
         }
 
         private void dataGridView1_SelectionChanged(object sender, EventArgs e)
@@ -58,6 +67,10 @@ namespace KindBdLab
             var t = dataGridView1.SelectedCells[0].RowIndex;
             var t2 = dataGridView1.Rows[t].Cells[4].Value;
             var t3 = dataGridView1.Rows[t].Cells[5].Value;
+            if (t2 == DBNull.Value || t3 == DBNull.Value)
+            {
+                return;
+            }
             using (var cmd = new MySqlCommand(string.Format("call sel({0},{1})", t2, t3), con))
             {
                 using (MySqlDataAdapter da = new MySqlDataAdapter(cmd))
@@ -107,7 +120,9 @@ namespace KindBdLab
                 }
             }
 
-            using (var cmd = new MySqlCommand(string.Format("SELECT max(`value`)-min(`value`) AS difference_rost, `date` FROM med WHERE children_id = {0} and type='rost' GROUP BY MONTH(`date`)", t4), con))
+            using (var cmd = new MySqlCommand(string.Format("SELECT max(`value`)-min(`value`) AS difference_rost, `date` FROM med " +
+                                                            "WHERE children_id = {0} and type='rost' " +
+                                                            "GROUP BY MONTH(`date`)", t4), con))
             {
                 using (MySqlDataAdapter da = new MySqlDataAdapter(cmd))
                 {
@@ -118,7 +133,9 @@ namespace KindBdLab
                 }
             }
 
-            using (var cmd = new MySqlCommand(string.Format("SELECT max(`value`)-min(`value`) AS difference_ves, `date` FROM med WHERE children_id = {0} and type='ves' GROUP BY MONTH(`date`)", t4), con))
+            using (var cmd = new MySqlCommand(string.Format("SELECT max(`value`)-min(`value`) AS difference_ves, `date` FROM med " +
+                                                            "WHERE children_id = {0} and type='ves' " +
+                                                            "GROUP BY MONTH(`date`)", t4), con))
             {
                 using (MySqlDataAdapter da = new MySqlDataAdapter(cmd))
                 {
@@ -128,11 +145,6 @@ namespace KindBdLab
                     dataGridView3.Update();
                 }
             }
-        }
-
-        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
-        {
-
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -146,21 +158,12 @@ namespace KindBdLab
             }
         }
 
-        private void dataGridView1_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e) {
-
-        }
-
-        private void bindingSource1_CurrentChanged(object sender, EventArgs e)
-        {
-
-        }
-
         private void timer1_Tick(object sender, EventArgs e)
         {
             if (NeedUpdate) {
                 NeedUpdate = false;
 
-                UpdateDb();
+               // UpdateDb();
             }
         }
 
@@ -177,8 +180,48 @@ namespace KindBdLab
         }
 
         private void button4_Click(object sender, EventArgs e)
+        { 
+            LinkAll();
+        }
+
+        private void button5_Click(object sender, EventArgs e)
         {
-            UpdateDb();
+            string query = "SELECT name, value FROM childrens LEFT JOIN med ON childrens.children_id = med.children_id " +
+                           "WHERE type = 'rost' AND date = (select max(date) from med where childrens.children_id = med.children_id and type = 'rost') " +
+                           "GROUP BY childrens.children_id " +
+                           "ORDER BY value DESC";
+            StringBuilder sb = new StringBuilder();
+            using (MySqlCommand cmd = new MySqlCommand(query, con))
+            {
+                var adapter = new MySqlDataAdapter(cmd);
+                var table = new DataTable();
+                adapter.Fill(table);
+                foreach (DataRow row in table.Rows) {
+                    sb.AppendLine(string.Format("{0} {1}см",row[0], row[1]));
+                }
+            }
+            MessageBox.Show(sb.ToString());
+        }
+
+        private void button6_Click(object sender, EventArgs e) {
+            string query = "SELECT group_id, COUNT(*) AS count FROM groups " +
+                           "LEFT JOIN childrens ON childrens.group = group_id " +
+                           "LEFT JOIN med ON med.children_id = childrens.children_id " +
+                           "WHERE med.type = 'ill' " +
+                           "GROUP BY group_id " +
+                           "ORDER BY count DESC";
+            StringBuilder sb = new StringBuilder();
+            using (MySqlCommand cmd = new MySqlCommand(query, con))
+            {
+                var adapter = new MySqlDataAdapter(cmd);
+                var table = new DataTable();
+                adapter.Fill(table);
+                foreach (DataRow row in table.Rows)
+                {
+                    sb.AppendLine(string.Format("группа {0} -- {1} болезней", row[0], row[1]));
+                }
+            }
+            MessageBox.Show(sb.ToString());
         }
     }
 }

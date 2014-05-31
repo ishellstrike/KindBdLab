@@ -25,6 +25,9 @@ namespace KindBdLab
             if (dataGridView1.SelectedCells.Count == 0) { return; }
             var t = dataGridView1.SelectedCells[0].RowIndex;
             var t2 = dataGridView1.Rows[t].Cells[0].Value;
+            if (t2 == DBNull.Value) {
+                return;
+            }
             groupsel = (int)t2;
             using (var cmd = new MySqlCommand(string.Format("SELECT `name`,`birth` from childrens where childrens.group = {0}", t2), con))
             {
